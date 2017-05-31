@@ -9,6 +9,7 @@ public class CmeansFinal {
     public static final int MAX_NUMBER_OF_LINES = 5;
     public static final double FUZZYNESS_COEF = 2;
     public static final double EPS = 0.01;
+    public static final double EQUALS_ZERO = 0.001;
 
     public static Formation calculateFormation(List<Position> positions) {
         if (positions.size() > NUMBER_OF_FIELD_PLAYERS) {
@@ -42,7 +43,7 @@ public class CmeansFinal {
             for (int i = 0; i < sortedPoints.length; i++) {
                 double sum = 0;
                 for (int j = 0; j < oldLines.length; j++) {
-                    if (distances[i][j] > 0.001) {
+                    if (distances[i][j] > EQUALS_ZERO) {
                         sum += 1 / Math.pow(distances[i][j], 2 / (FUZZYNESS_COEF - 1));
                     } else {
                         for (int k = 0; k < oldLines.length; k++) {
