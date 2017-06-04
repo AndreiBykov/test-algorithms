@@ -4,12 +4,12 @@ import java.util.stream.Collectors;
 
 public class CmeansFinal {
 
-    public static final int DEFAULT_NUMBER_OF_LINES = 3;
-    public static final int NUMBER_OF_FIELD_PLAYERS = 10;
-    public static final int MAX_NUMBER_OF_LINES = 5;
-    public static final double FUZZYNESS_COEF = 2;
-    public static final double EPS = 0.01;
-    public static final double EQUALS_ZERO = 0.001;
+    private static final int DEFAULT_NUMBER_OF_LINES = 3;
+    private static final int NUMBER_OF_FIELD_PLAYERS = 10;
+    private static final int MAX_NUMBER_OF_LINES = 5;
+    private static final double FUZZYNESS_COEF = 2;
+    private static final double EPS = 0.01;
+    private static final double EQUALS_ZERO = 0.001;
 
     public static Formation calculateFormation(List<Position> positions) {
         if (positions.size() > NUMBER_OF_FIELD_PLAYERS) {
@@ -24,64 +24,45 @@ public class CmeansFinal {
                 .toArray();
 
         int numberOfLines = countLinesUsingDelta2(sortedPoints);
-        double[] newLines = getLines(sortedPoints, numberOfLines);
+        double[] oldLines = getLines(sortedPoints, numberOfLines);
 
-        double[][] distances = new double[sortedPoints.length][newLines.length];
-        double[][] fuzzyPartitionMatrix = new double[sortedPoints.length][newLines.length];
-        double[] oldLines;
+        double[][] distances = new double[sortedPoints.length][oldLines.length];
+        double[][] fuzzyPartitionMatrix = new double[sortedPoints.length][oldLines.length];
+        double[] newLines = null;
 
         do {
-            oldLines = Arrays.copyOf(newLines, newLines.length);
-
-            for (int i = 0; i < sortedPoints.length; i++) {
-                for (int j = 0; j < oldLines.length; j++) {
-                    distances[i][j] = Math.abs(sortedPoints[i] - oldLines[j]);//TODO pow 2
-                }
+            if (newLines != null) {
+                oldLines = newLines;
             }
 
-            label:
-            for (int i = 0; i < sortedPoints.length; i++) {
-                double sum = 0;
-                for (int j = 0; j < oldLines.length; j++) {
-                    if (distances[i][j] > EQUALS_ZERO) {
-                        sum += 1 / Math.pow(distances[i][j], 2 / (FUZZYNESS_COEF - 1));
-                    } else {
-                        for (int k = 0; k < oldLines.length; k++) {
-                            fuzzyPartitionMatrix[i][k] = (k == j) ? 1.0 : 0.0;
-                        }
-                        continue label;
-                    }
-                }
+            calculatingDistances(sortedPoints, distances, oldLines);
 
-                for (int j = 0; j < oldLines.length; j++) {
-                    fuzzyPartitionMatrix[i][j] = 1 / (Math.pow(distances[i][j], 2 / (FUZZYNESS_COEF - 1)) * sum);
-                }
-            }
+            calculatingFuzzyPartitionMatrix(distances, fuzzyPartitionMatrix);
 
-            for (int i = 0; i < newLines.length; i++) {
-                double A = 0;
-                double B = 0;
-                for (int j = 0; j < sortedPoints.length; j++) {
-                    double temp = Math.pow(fuzzyPartitionMatrix[j][i], FUZZYNESS_COEF);
-                    A += temp * sortedPoints[j];
-                    B += temp;
-                }
-                newLines[i] = A / B;
-            }
+            newLines = calculationNewLines(sortedPoints, fuzzyPartitionMatrix);
 
         } while (!isTermination(oldLines, newLines, EPS));
 
+        roundingFuzzyPartitionMatrix(sortedPoints, fuzzyPartitionMatrix, newLines);
+
+        return Formation.getFormation(positions, fuzzyPartitionMatrix, newLines);
+    }
+
+    private static void roundingFuzzyPartitionMatrix(double[] sortedPoints, double[][] fuzzyPartitionMatrix, double[] newLines) {
         for (int i = 0; i < fuzzyPartitionMatrix.length; i++) {
-            int firstCluster = -1;
+            int leftCluster = -1;
             for (int j = 0; j < newLines.length; j++) {
                 if (Double.compare(newLines[j], sortedPoints[i]) <= 0) {
-                    firstCluster = j;
+                    leftCluster = j;
+                }
+                else{
+                    break;
                 }
             }
 
             double sum = 0;
             for (int j = 0; j < fuzzyPartitionMatrix[i].length; j++) {
-                if (j == firstCluster || j == firstCluster + 1) {
+                if (j == leftCluster || j == leftCluster + 1) {
                     fuzzyPartitionMatrix[i][j] = round(fuzzyPartitionMatrix[i][j], 1);
                 } else {
                     fuzzyPartitionMatrix[i][j] = 0;
@@ -89,35 +70,58 @@ public class CmeansFinal {
                 sum += fuzzyPartitionMatrix[i][j];
             }
 
-            if (Double.compare(sum, 1) < 0) {
-                if (firstCluster != -1 && firstCluster != newLines.length - 1) {
-                    if (fuzzyPartitionMatrix[i][firstCluster] > fuzzyPartitionMatrix[i][firstCluster + 1]) {
-                        fuzzyPartitionMatrix[i][firstCluster] = 1 - fuzzyPartitionMatrix[i][firstCluster + 1];
-                    } else {
-                        fuzzyPartitionMatrix[i][firstCluster + 1] = 1 - fuzzyPartitionMatrix[i][firstCluster];
+            if (Double.compare(sum, 1) < 0 && leftCluster != -1 && leftCluster != newLines.length - 1) {
+                if (fuzzyPartitionMatrix[i][leftCluster] > fuzzyPartitionMatrix[i][leftCluster + 1]) {
+                    fuzzyPartitionMatrix[i][leftCluster] = 1 - fuzzyPartitionMatrix[i][leftCluster + 1];
+                } else {
+                    fuzzyPartitionMatrix[i][leftCluster + 1] = 1 - fuzzyPartitionMatrix[i][leftCluster];
+                }
+            }
+        }
+    }
+
+    private static double[] calculationNewLines(double[] sortedPoints, double[][] fuzzyPartitionMatrix) {
+        double[] newLines = new double[fuzzyPartitionMatrix[0].length];
+        for (int i = 0; i < fuzzyPartitionMatrix[0].length; i++) {
+            double A = 0;
+            double B = 0;
+            for (int j = 0; j < fuzzyPartitionMatrix.length; j++) {
+                double temp = Math.pow(fuzzyPartitionMatrix[j][i], FUZZYNESS_COEF);
+                A += temp * sortedPoints[j];
+                B += temp;
+            }
+            newLines[i] = A / B;
+        }
+        return newLines;
+    }
+
+    private static void calculatingDistances(double[] sortedPoints, double[][] distances, double[] oldLines) {
+        for (int i = 0; i < distances.length; i++) {
+            for (int j = 0; j < distances[i].length; j++) {
+                distances[i][j] = Math.abs(sortedPoints[i] - oldLines[j]);
+            }
+        }
+    }
+
+    private static void calculatingFuzzyPartitionMatrix(double[][] distances, double[][] fuzzyPartitionMatrix) {
+        label:
+        for (int i = 0; i < fuzzyPartitionMatrix.length; i++) {
+            double sum = 0;
+            for (int j = 0; j < fuzzyPartitionMatrix[i].length; j++) {
+                if (distances[i][j] > EQUALS_ZERO) {
+                    sum += 1 / Math.pow(distances[i][j], 2 / (FUZZYNESS_COEF - 1));
+                } else {
+                    for (int k = 0; k < fuzzyPartitionMatrix[i].length; k++) {
+                        fuzzyPartitionMatrix[i][k] = (k == j) ? 1.0 : 0.0;
                     }
+                    continue label;
                 }
             }
-        }
 
-        Formation formation = new Formation();
-        for (int i = 0; i < newLines.length; i++) {
-            FormationLine line = new FormationLine(newLines[i]);
-            for (int j = 0; j < sortedPoints.length; j++) {
-                if (Double.compare(fuzzyPartitionMatrix[j][i], 0) > 0) {
-                    line.addFuzzyPosition(new FuzzyPosition(positions.get(j), fuzzyPartitionMatrix[j][i]));
-                }
+            for (int j = 0; j < fuzzyPartitionMatrix[i].length; j++) {
+                fuzzyPartitionMatrix[i][j] = 1 / (Math.pow(distances[i][j], 2 / (FUZZYNESS_COEF - 1)) * sum);
             }
-            formation.addLine(line);
         }
-
-        for (int i = 0; i < newLines.length; i++) {
-            System.out.printf("%.2f  ", newLines[i]);
-        }
-        System.out.println();
-        System.out.println();
-
-        return formation;
     }
 
     private static double round(double value, int places) {
@@ -204,178 +208,5 @@ public class CmeansFinal {
 
         Arrays.sort(centers);
         return centers;
-    }
-
-}
-
-class Formation implements Iterable<FormationLine> {
-    private final List<FormationLine> formationLines = new ArrayList<>();
-
-    public int numberOfLines() {
-        return formationLines.size();
-    }
-
-    public FormationLine getLine(int index) {
-        return formationLines.get(index);
-    }
-
-    public void addLine(FormationLine line) {
-        formationLines.add(line);
-    }
-
-    @Override
-    public Iterator<FormationLine> iterator() {
-        return formationLines.iterator();
-    }
-
-    @Override
-    public String toString() {
-        return formationLines.stream()
-                .map(FormationLine::toString)
-                .collect(Collectors.joining("\n"));
-    }
-}
-
-class FormationLine {
-    final private double xCenter;
-    final private List<FuzzyPosition> fuzzyPositions = new ArrayList<>();
-
-    public FormationLine(double xCenter) {
-        this.xCenter = xCenter;
-    }
-
-    public void addFuzzyPosition(FuzzyPosition fuzzyPosition) {
-        fuzzyPositions.add(fuzzyPosition);
-    }
-
-    public double getxCenter() {
-        return xCenter;
-    }
-
-    public List<FuzzyPosition> getFuzzyPositions() {
-        return fuzzyPositions;
-    }
-
-    @Override
-    public String toString() {
-        return fuzzyPositions.stream()
-                .map(FuzzyPosition::toString)
-                .collect(Collectors.joining(" ; ", String.format("%.1f", xCenter) + " : { ", " }"));
-    }
-}
-
-class FuzzyPosition {
-    final private Position position;
-    final private double fuzziness;
-
-    public FuzzyPosition(Position position, double fuzziness) {
-        this.position = position;
-        this.fuzziness = fuzziness;
-    }
-
-    public Position getPosition() {
-        return position;
-    }
-
-    public double getFuzziness() {
-        return fuzziness;
-    }
-
-    @Override
-    public String toString() {
-        return position + String.format(" / %.1f", fuzziness);
-    }
-}
-
-interface Position extends Comparable<Position> {
-    double getX();
-
-    double getY();
-}
-
-class ReachabilityArea implements Position {
-    final private double xCenter;
-    final private double yCenter;
-    final private double radius;
-    final private double angle;   //in graduses
-    final private double x;
-    final private double y;
-
-    public ReachabilityArea(double xCenter, double yCenter, double radius, double angle) {
-        this.xCenter = xCenter;
-        this.yCenter = yCenter;
-        this.radius = radius;
-        this.angle = angle;
-        double angleInRadians = angle * Math.PI / 180;
-        x = xCenter + radius * Math.cos(angleInRadians);
-        y = yCenter + radius * Math.sin(angleInRadians);
-    }
-
-    @Override
-    public int compareTo(Position o) {
-        int compareX = Double.compare(x, o.getX());
-        return compareX != 0 ? compareX : Double.compare(y, o.getY());
-    }
-
-    @Override
-    public String toString() {
-        return String.format("(%.1f;%.1f)", getX(), getY());
-    }
-
-    @Override
-    public double getX() {
-        return x;
-    }
-
-    @Override
-    public double getY() {
-        return y;
-    }
-
-    public double getxCenter() {
-        return xCenter;
-    }
-
-    public double getyCenter() {
-        return yCenter;
-    }
-
-    public double getRadius() {
-        return radius;
-    }
-
-    public double getAngle() {
-        return angle;
-    }
-}
-
-class Point implements Position {
-    private double x;
-    private double y;
-
-    public Point(double x, double y) {
-        this.x = x;
-        this.y = y;
-    }
-
-    @Override
-    public double getX() {
-        return x;
-    }
-
-    @Override
-    public double getY() {
-        return y;
-    }
-
-    @Override
-    public int compareTo(Position o) {
-        int compareX = Double.compare(x, o.getX());
-        return compareX != 0 ? compareX : Double.compare(y, o.getY());
-    }
-
-    @Override
-    public String toString() {
-        return String.format("(%.2f;%.2f)", x, y);
     }
 }

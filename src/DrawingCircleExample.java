@@ -17,7 +17,7 @@ public class DrawingCircleExample {
     private static final int GAP = 5;
 
     private void displayGUI() {
-        JFrame frame = new JFrame("");
+        JFrame frame = new JFrame("Testing program");
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.setPreferredSize(new Dimension(650, 500));
 
@@ -28,7 +28,6 @@ public class DrawingCircleExample {
         drawingBoard.setLocation(0, 0);
 
         txt = new JTextArea();
-        txt.setEnabled(false);
         txt.setPreferredSize(new Dimension(100, 380));
 
         drawingBoard.addMouseListener(new MouseAdapter() {
@@ -43,6 +42,9 @@ public class DrawingCircleExample {
                 drawingBoard.setCurX(e.getX());
                 drawingBoard.setCurY(e.getY());
                 drawingBoard.drawPoint();
+                txt.setText(drawingBoard.getPoints().stream()
+                        .map(Object::toString)
+                        .collect(Collectors.joining("\n")));
             }
         });
 
@@ -59,17 +61,17 @@ public class DrawingCircleExample {
             Formation formation = CmeansFinal.calculateFormation(list);
 
             System.out.println(formation);
+            System.out.println();
 
             double[] centers = StreamSupport.stream(formation.spliterator(), false)
                     .mapToDouble(FormationLine::getxCenter)
                     .toArray();
-            drawingBoard.drawVerticalLines(centers, new double[0]);
+            drawingBoard.drawVerticalLines(centers);
         });
         contentPane.add(drawingBoard);
         contentPane.add(txt);
         contentPane.add(btnCalc);
         contentPane.add(btnClear);
-
 
         frame.setContentPane(contentPane);
         frame.pack();
@@ -115,15 +117,17 @@ class DrawingBoard extends JPanel {
     void drawPoint() {
 
         if (oldX == curX && oldY == curY) {
-            positions.add(new Point((curX - START_X - CENTER_X) / K, (curY - START_Y - CENTER_Y) / K));
+            positions.add(new Point((curX - START_X - CENTER_X) / (double) K, (curY - START_Y - CENTER_Y) / (double) K));
         } else {
-            positions.add(new ReachabilityArea((oldX - START_X - CENTER_X) / K, (oldY - START_Y - CENTER_Y) / K,
-                    Math.sqrt(Math.pow((curX - oldX) / K, 2) + Math.pow((curY - oldY) / K, 2)), Math.atan2(curY - oldY, curX - oldX) / Math.PI * 180));
+            positions.add(new ReachabilityArea((oldX - START_X - CENTER_X) / (double) K,
+                    (oldY - START_Y - CENTER_Y) / (double) K,
+                    Math.sqrt(Math.pow((curX - oldX) / (double) K, 2) + Math.pow((curY - oldY) / (double) K, 2)),
+                    Math.atan2(curY - oldY, curX - oldX) / Math.PI * 180));
         }
         repaint();
     }
 
-    void drawVerticalLines(double[] x, double[] x1) {
+    void drawVerticalLines(double[] x) {
         verticalLines.clear();
         for (double v : x) {
             verticalLines.add((int) v);
@@ -164,15 +168,18 @@ class DrawingBoard extends JPanel {
         for (Position position : positions) {
             if (position instanceof ReachabilityArea) {
                 ReachabilityArea area = (ReachabilityArea) position;
-                g.drawOval((int) (area.getxCenter() - area.getRadius()) * K, (int) (area.getyCenter() - area.getRadius()) * K, (int) area.getRadius() * 2 * K, (int) area.getRadius() * 2 * K);
-                g.fillOval((int) area.getxCenter() * K - 2, (int) area.getyCenter() * K - 2, 4, 4);
-                g.drawLine((int) position.getX() * K, (int) position.getY() * K, (int) area.getxCenter() * K, (int) area.getyCenter() * K);
+                g.drawOval((int) Math.round((area.getxCenter() - area.getRadius()) * K),
+                        (int) Math.round((area.getyCenter() - area.getRadius()) * K),
+                        (int) Math.round(area.getRadius() * 2 * K), (int) Math.round(area.getRadius() * 2 * K));
+                g.fillOval((int) Math.round(area.getxCenter() * K) - 2, (int) Math.round(area.getyCenter() * K) - 2, 4, 4);
+                g.drawLine((int) Math.round(position.getX() * K), (int) Math.round(position.getY() * K),
+                        (int) Math.round(area.getxCenter() * K), (int) Math.round(area.getyCenter() * K));
             }
-            g.fillOval((int) position.getX() * K - 4, (int) position.getY() * K - 4, 8, 8);
-            g.fillOval((int) position.getX() * K - 4, CENTER_Y + 16, 8, 8);
+            g.fillOval((int) Math.round(position.getX() * K) - 4, (int) (Math.round(position.getY() * K) - 4), 8, 8);
+            g.fillOval((int) Math.round(position.getX() * K) - 4, CENTER_Y + 16, 8, 8);
         }
 
-        verticalLines.forEach(x -> g.fillRect(x * K, -CENTER_Y - 20, 2, 2 * CENTER_Y));
+        verticalLines.forEach(x -> g.fillRect(x * K, -CENTER_Y, 2, 2 * CENTER_Y));
         g.setColor(Color.BLUE);
     }
 
