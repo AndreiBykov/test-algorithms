@@ -1,8 +1,9 @@
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 
-public class CmeansFinal {
+public class CmeansFormation {
 
     private static final int DEFAULT_NUMBER_OF_LINES = 3;
     private static final int NUMBER_OF_FIELD_PLAYERS = 10;
@@ -10,6 +11,7 @@ public class CmeansFinal {
     private static final double FUZZYNESS_COEF = 2;
     private static final double EPS = 0.01;
     private static final double EQUALS_ZERO = 0.001;
+    private static final int MIN_NUMBER_OF_LINES = 3;
 
     public static Formation calculateFormation(List<Position> positions) {
         if (positions.size() > NUMBER_OF_FIELD_PLAYERS) {
@@ -23,7 +25,7 @@ public class CmeansFinal {
                 .sorted()
                 .toArray();
 
-        int numberOfLines = countLinesUsingDelta2(sortedPoints);
+        int numberOfLines = countClustersUsingRange5(sortedPoints);
         double[] oldLines = getLines(sortedPoints, numberOfLines);
 
         double[][] distances = new double[sortedPoints.length][oldLines.length];
@@ -54,8 +56,7 @@ public class CmeansFinal {
             for (int j = 0; j < newLines.length; j++) {
                 if (Double.compare(newLines[j], sortedPoints[i]) <= 0) {
                     leftCluster = j;
-                }
-                else{
+                } else {
                     break;
                 }
             }
@@ -148,7 +149,9 @@ public class CmeansFinal {
         for (int i = 0; i < sortedDelta.length; i++) {
             sortedDelta[i] = sortedPoints[i + 1] - sortedPoints[i];
         }
+        System.out.println(Arrays.toString(sortedDelta));
         Arrays.sort(sortedDelta);
+        System.out.println(Arrays.toString(sortedDelta));
 
         double[] delta2 = new double[sortedDelta.length - 1];
         for (int i = 0; i < delta2.length; i++) {
@@ -166,6 +169,24 @@ public class CmeansFinal {
 
         int numberOfLines = delta2.length - maxDelta2Index + 1;
         if (numberOfLines > MAX_NUMBER_OF_LINES) {
+            return DEFAULT_NUMBER_OF_LINES;
+        }
+        return numberOfLines;
+    }
+
+    public static int countClustersUsingRange5(double[] sortedPoints) {
+
+        double range = sortedPoints[sortedPoints.length - 1] - sortedPoints[0];
+        double threshold = range / 5;
+
+        double[] delta = new double[sortedPoints.length - 1];
+        for (int i = 0; i < delta.length; i++) {
+            delta[i] = sortedPoints[i + 1] - sortedPoints[i];
+        }
+        int numberOfLines = (int) Arrays.stream(delta)
+                .filter(x -> x > threshold)
+                .count() + 1;
+        if (numberOfLines < MIN_NUMBER_OF_LINES || numberOfLines > MAX_NUMBER_OF_LINES) {
             return DEFAULT_NUMBER_OF_LINES;
         }
         return numberOfLines;

@@ -2,7 +2,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseMotionAdapter;
 import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -58,7 +57,7 @@ public class DrawingCircleExample {
         btnCalc.addActionListener(e -> {
 
             List<Position> list = drawingBoard.getPoints();
-            Formation formation = CmeansFinal.calculateFormation(list);
+            Formation formation = CmeansFormation.calculateFormation(list);
 
             System.out.println(formation);
             System.out.println();
