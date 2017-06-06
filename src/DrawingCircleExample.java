@@ -63,7 +63,7 @@ public class DrawingCircleExample {
             System.out.println();
 
             double[] centers = StreamSupport.stream(formation.spliterator(), false)
-                    .mapToDouble(FormationLine::getxCenter)
+                    .mapToDouble(FormationLine::getCenter)
                     .toArray();
             drawingBoard.drawVerticalLines(centers);
         });
@@ -167,12 +167,12 @@ class DrawingBoard extends JPanel {
         for (Position position : positions) {
             if (position instanceof ReachabilityArea) {
                 ReachabilityArea area = (ReachabilityArea) position;
-                g.drawOval((int) Math.round((area.getxCenter() - area.getRadius()) * K),
-                        (int) Math.round((area.getyCenter() - area.getRadius()) * K),
+                g.drawOval((int) Math.round((area.getXCenter() - area.getRadius()) * K),
+                        (int) Math.round((area.getYCenter() - area.getRadius()) * K),
                         (int) Math.round(area.getRadius() * 2 * K), (int) Math.round(area.getRadius() * 2 * K));
-                g.fillOval((int) Math.round(area.getxCenter() * K) - 2, (int) Math.round(area.getyCenter() * K) - 2, 4, 4);
+                g.fillOval((int) Math.round(area.getXCenter() * K) - 2, (int) Math.round(area.getYCenter() * K) - 2, 4, 4);
                 g.drawLine((int) Math.round(position.getX() * K), (int) Math.round(position.getY() * K),
-                        (int) Math.round(area.getxCenter() * K), (int) Math.round(area.getyCenter() * K));
+                        (int) Math.round(area.getXCenter() * K), (int) Math.round(area.getYCenter() * K));
             }
             g.fillOval((int) Math.round(position.getX() * K) - 4, (int) (Math.round(position.getY() * K) - 4), 8, 8);
             g.fillOval((int) Math.round(position.getX() * K) - 4, CENTER_Y + 16, 8, 8);

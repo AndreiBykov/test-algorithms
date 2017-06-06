@@ -37,11 +37,11 @@ public class ReachabilityArea implements Position {
         return y;
     }
 
-    public double getxCenter() {
+    public double getXCenter() {
         return xCenter;
     }
 
-    public double getyCenter() {
+    public double getYCenter() {
         return yCenter;
     }
 

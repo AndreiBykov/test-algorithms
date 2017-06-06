@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Diagram>
+  <ID>JAVA</ID>
+  <OriginalElement />
+  <nodes>
+    <node x="-186.3095238095238" y="275.86904761904736">Position</node>
+    <node x="-46.309523809523796" y="433.86904761904736">Point</node>
+    <node x="-546.3095238095237" y="389.86904761904736">ReachabilityArea</node>
+    <node x="-255.41666666666663" y="38.1666666666668">FuzzyPosition</node>
+    <node x="-662.1428571428573" y="230.76190476190504">Formation</node>
+    <node x="-670.5555555555555" y="27.722222222222257">FormationLine</node>
+  </nodes>
+  <notes />
+  <edges>
+    <edge source="Formation" target="FormationLine">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
+    <edge source="ReachabilityArea" target="Position">
+      <point x="0.0" y="-114.5" />
+      <point x="-306.3095238095238" y="374.86904761904736" />
+      <point x="-149.5595238095238" y="374.86904761904736" />
+      <point x="-36.75" y="37.0" />
+    </edge>
+    <edge source="FuzzyPosition" target="Position">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
+    <edge source="Point" target="Position">
+      <point x="0.0" y="-70.5" />
+      <point x="80.6904761904762" y="374.86904761904736" />
+      <point x="-76.0595238095238" y="374.86904761904736" />
+      <point x="36.75" y="37.0" />
+    </edge>
+    <edge source="FormationLine" target="FuzzyPosition">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
+    <edge source="Formation" target="FuzzyPosition">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
+  </edges>
+  <settings layout="Hierarchic Group" zoom="0.4999999999999998" x="-157.8888888888887" y="466.66666666666674" />
+  <SelectedNodes />
+  <Categories>
+    <Category>Methods</Category>
+    <Category>Constructors</Category>
+  </Categories>
+  <SCOPE>All</SCOPE>
+  <VISIBILITY>public</VISIBILITY>
+</Diagram>
+

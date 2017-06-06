@@ -6,16 +6,15 @@ import java.util.stream.Collectors;
 public class Formation implements Iterable<FormationLine> {
     private final List<FormationLine> formationLines = new ArrayList<>();
 
+    private Formation() {
+    }
+
     public int numberOfLines() {
         return formationLines.size();
     }
 
     public FormationLine getLine(int index) {
         return formationLines.get(index);
-    }
-
-    public void addLine(FormationLine line) {
-        formationLines.add(line);
     }
 
     public static Formation getFormation(List<Position> positions, double[][] fuzzyPartitionMatrix, double[] newLines) {
@@ -27,7 +26,7 @@ public class Formation implements Iterable<FormationLine> {
                     line.addFuzzyPosition(new FuzzyPosition(positions.get(j), fuzzyPartitionMatrix[j][i]));
                 }
             }
-            formation.addLine(line);
+            formation.formationLines.add(line);
         }
         return formation;
     }

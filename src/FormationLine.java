@@ -3,19 +3,19 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class FormationLine {
-    final private double xCenter;
+    final private double center;
     final private List<FuzzyPosition> fuzzyPositions = new ArrayList<>();
 
-    public FormationLine(double xCenter) {
-        this.xCenter = xCenter;
+    public FormationLine(double center) {
+        this.center = center;
     }
 
     public void addFuzzyPosition(FuzzyPosition fuzzyPosition) {
         fuzzyPositions.add(fuzzyPosition);
     }
 
-    public double getxCenter() {
-        return xCenter;
+    public double getCenter() {
+        return center;
     }
 
     public List<FuzzyPosition> getFuzzyPositions() {
@@ -26,6 +26,6 @@ public class FormationLine {
     public String toString() {
         return fuzzyPositions.stream()
                 .map(FuzzyPosition::toString)
-                .collect(Collectors.joining(" ; ", String.format("%.1f", xCenter) + " : { ", " }"));
+                .collect(Collectors.joining(" ; ", String.format("%.1f", center) + " : { ", " }"));
     }
 }
