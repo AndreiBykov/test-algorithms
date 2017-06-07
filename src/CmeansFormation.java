@@ -7,11 +7,11 @@ public class CmeansFormation {
 
     private static final int DEFAULT_NUMBER_OF_LINES = 3;
     private static final int NUMBER_OF_FIELD_PLAYERS = 10;
+    private static final int MIN_NUMBER_OF_LINES = 3;
     private static final int MAX_NUMBER_OF_LINES = 5;
     private static final double FUZZYNESS_COEF = 2;
     private static final double EPS = 0.01;
     private static final double EQUALS_ZERO = 0.001;
-    private static final int MIN_NUMBER_OF_LINES = 3;
 
     public static Formation calculateFormation(List<Position> positions) {
         if (positions.size() > NUMBER_OF_FIELD_PLAYERS) {
@@ -174,7 +174,7 @@ public class CmeansFormation {
         return numberOfLines;
     }
 
-    public static int countClustersUsingRange5(double[] sortedPoints) {
+    private static int countClustersUsingRange5(double[] sortedPoints) {
 
         double range = sortedPoints[sortedPoints.length - 1] - sortedPoints[0];
         double threshold = range / 5;
