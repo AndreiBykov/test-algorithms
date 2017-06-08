@@ -1,4 +1,5 @@
 public class FuzzyPosition {
+
     final private Position position;
     final private double fuzziness;
 

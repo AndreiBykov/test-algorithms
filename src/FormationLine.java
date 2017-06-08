@@ -3,6 +3,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class FormationLine {
+
     final private double center;
     final private List<FuzzyPosition> fuzzyPositions = new ArrayList<>();
 
@@ -25,7 +26,9 @@ public class FormationLine {
     @Override
     public String toString() {
         return fuzzyPositions.stream()
-                .map(FuzzyPosition::toString)
-                .collect(Collectors.joining(" ; ", String.format("%.1f", center) + " : { ", " }"));
+            .map(FuzzyPosition::toString)
+            .collect(Collectors.joining(" ; ",
+                                        String.format("%.1f", center) + " : { ",
+                                        " }"));
     }
 }

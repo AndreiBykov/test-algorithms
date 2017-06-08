@@ -17,26 +17,31 @@ public class CmeansFormation {
 
     /**
      * Вычисление схемы расположения игроков
+     *
      * @param positions список позиций игроков
      * @return схема расположения игроков
      */
     public static Formation calculateFormation(List<Position> positions) {
         if (positions.size() > NUMBER_OF_FIELD_PLAYERS) {
-            throw new RuntimeException("Number of field players cannot be more than " + NUMBER_OF_FIELD_PLAYERS);
+            throw new RuntimeException(
+                "Number of field players cannot be more than "
+                + NUMBER_OF_FIELD_PLAYERS);
         }
 
         Collections.sort(positions);
 
         double[] sortedPoints = positions.stream()
-                .mapToDouble(Position::getX)
-                .sorted()
-                .toArray();
+            .mapToDouble(Position::getX)
+            .sorted()
+            .toArray();
 
         int numberOfLines = countClustersUsingRange5(sortedPoints);
         double[] oldLines = getLines(sortedPoints, numberOfLines);
 
         double[][] distances = new double[sortedPoints.length][oldLines.length];
-        double[][] fuzzyPartitionMatrix = new double[sortedPoints.length][oldLines.length];
+        double[][]
+            fuzzyPartitionMatrix =
+            new double[sortedPoints.length][oldLines.length];
         double[] newLines = null;
 
         do {
@@ -52,18 +57,24 @@ public class CmeansFormation {
 
         } while (!isTermination(oldLines, newLines, EPS));
 
-        roundingFuzzyPartitionMatrix(sortedPoints, fuzzyPartitionMatrix, newLines);
+        roundingFuzzyPartitionMatrix(sortedPoints, fuzzyPartitionMatrix,
+                                     newLines);
 
-        return Formation.getFormation(positions, fuzzyPartitionMatrix, newLines);
+        return Formation
+            .getFormation(positions, fuzzyPartitionMatrix, newLines);
     }
 
     /**
      * Округление и корректировка матрицы нечеткой приналежности
-     * @param sortedPoints массив отсортированных координат расположения игроков
+     *
+     * @param sortedPoints         массив отсортированных координат расположения
+     *                             игроков
      * @param fuzzyPartitionMatrix матрица нечеткой принадлежности
-     * @param lines массив координат линий
+     * @param lines                массив координат линий
      */
-    private static void roundingFuzzyPartitionMatrix(double[] sortedPoints, double[][] fuzzyPartitionMatrix, double[] lines) {
+    private static void roundingFuzzyPartitionMatrix(double[] sortedPoints,
+                                                     double[][] fuzzyPartitionMatrix,
+                                                     double[] lines) {
         for (int i = 0; i < fuzzyPartitionMatrix.length; i++) {
             int leftCluster = -1;
             for (int j = 0; j < lines.length; j++) {
@@ -77,18 +88,23 @@ public class CmeansFormation {
             double sum = 0;
             for (int j = 0; j < fuzzyPartitionMatrix[i].length; j++) {
                 if (j == leftCluster || j == leftCluster + 1) {
-                    fuzzyPartitionMatrix[i][j] = round(fuzzyPartitionMatrix[i][j], 1);
+                    fuzzyPartitionMatrix[i][j] =
+                        round(fuzzyPartitionMatrix[i][j], 1);
                 } else {
                     fuzzyPartitionMatrix[i][j] = 0;
                 }
                 sum += fuzzyPartitionMatrix[i][j];
             }
 
-            if (Double.compare(sum, 1) < 0 && leftCluster != -1 && leftCluster != lines.length - 1) {
-                if (fuzzyPartitionMatrix[i][leftCluster] > fuzzyPartitionMatrix[i][leftCluster + 1]) {
-                    fuzzyPartitionMatrix[i][leftCluster] = 1 - fuzzyPartitionMatrix[i][leftCluster + 1];
+            if (Double.compare(sum, 1) < 0 && leftCluster != -1
+                && leftCluster != lines.length - 1) {
+                if (fuzzyPartitionMatrix[i][leftCluster]
+                    > fuzzyPartitionMatrix[i][leftCluster + 1]) {
+                    fuzzyPartitionMatrix[i][leftCluster] =
+                        1 - fuzzyPartitionMatrix[i][leftCluster + 1];
                 } else {
-                    fuzzyPartitionMatrix[i][leftCluster + 1] = 1 - fuzzyPartitionMatrix[i][leftCluster];
+                    fuzzyPartitionMatrix[i][leftCluster + 1] =
+                        1 - fuzzyPartitionMatrix[i][leftCluster];
                 }
             }
         }
@@ -96,17 +112,22 @@ public class CmeansFormation {
 
     /**
      * Вычисление новых координта линий расположения игроков
-     * @param sortedPoints массив отсортированных координат расположения игроков
+     *
+     * @param sortedPoints         массив отсортированных координат расположения
+     *                             игроков
      * @param fuzzyPartitionMatrix матрица нечеткой принадлежности
      * @return массив новых координат линий
      */
-    private static double[] calculationNewLines(double[] sortedPoints, double[][] fuzzyPartitionMatrix) {
+    private static double[] calculationNewLines(double[] sortedPoints,
+                                                double[][] fuzzyPartitionMatrix) {
         double[] newLines = new double[fuzzyPartitionMatrix[0].length];
         for (int i = 0; i < fuzzyPartitionMatrix[0].length; i++) {
             double A = 0;
             double B = 0;
             for (int j = 0; j < fuzzyPartitionMatrix.length; j++) {
-                double temp = Math.pow(fuzzyPartitionMatrix[j][i], FUZZYNESS_COEF);
+                double
+                    temp =
+                    Math.pow(fuzzyPartitionMatrix[j][i], FUZZYNESS_COEF);
                 A += temp * sortedPoints[j];
                 B += temp;
             }
@@ -117,11 +138,15 @@ public class CmeansFormation {
 
     /**
      * Вычисление дистанций от игроков до линий расположения
-     * @param sortedPoints массив отсортированных координат расположения игроков
-     * @param distances матрица дистанций
-     * @param lines массив координат линий
+     *
+     * @param sortedPoints массив отсортированных координат расположения
+     *                     игроков
+     * @param distances    матрица дистанций
+     * @param lines        массив координат линий
      */
-    private static void calculatingDistances(double[] sortedPoints, double[][] distances, double[] lines) {
+    private static void calculatingDistances(double[] sortedPoints,
+                                             double[][] distances,
+                                             double[] lines) {
         for (int i = 0; i < distances.length; i++) {
             for (int j = 0; j < distances[i].length; j++) {
                 distances[i][j] = Math.abs(sortedPoints[i] - lines[j]);
@@ -131,16 +156,19 @@ public class CmeansFormation {
 
     /**
      * Вычисление матрицы нечеткой принадлежности
-     * @param distances матрица дистанций
+     *
+     * @param distances            матрица дистанций
      * @param fuzzyPartitionMatrix матрицы нечеткой принадлежности
      */
-    private static void calculatingFuzzyPartitionMatrix(double[][] distances, double[][] fuzzyPartitionMatrix) {
+    private static void calculatingFuzzyPartitionMatrix(double[][] distances,
+                                                        double[][] fuzzyPartitionMatrix) {
         label:
         for (int i = 0; i < fuzzyPartitionMatrix.length; i++) {
             double sum = 0;
             for (int j = 0; j < fuzzyPartitionMatrix[i].length; j++) {
                 if (distances[i][j] > EQUALS_ZERO) {
-                    sum += 1 / Math.pow(distances[i][j], 2 / (FUZZYNESS_COEF - 1));
+                    sum +=
+                        1 / Math.pow(distances[i][j], 2 / (FUZZYNESS_COEF - 1));
                 } else {
                     for (int k = 0; k < fuzzyPartitionMatrix[i].length; k++) {
                         fuzzyPartitionMatrix[i][k] = (k == j) ? 1.0 : 0.0;
@@ -150,14 +178,17 @@ public class CmeansFormation {
             }
 
             for (int j = 0; j < fuzzyPartitionMatrix[i].length; j++) {
-                fuzzyPartitionMatrix[i][j] = 1 / (Math.pow(distances[i][j], 2 / (FUZZYNESS_COEF - 1)) * sum);
+                fuzzyPartitionMatrix[i][j] =
+                    1 / (Math.pow(distances[i][j], 2 / (FUZZYNESS_COEF - 1))
+                         * sum);
             }
         }
     }
 
     /**
      * Округление дробного числа
-     * @param value число
+     *
+     * @param value  число
      * @param places количество знаков после запятой
      * @return округленное число
      */
@@ -170,12 +201,14 @@ public class CmeansFormation {
 
     /**
      * Проверка условия остановки итерационного процесса
+     *
      * @param oldLines старые координаты линий
      * @param newLines новые координаты линий
-     * @param eps параметр остановки
+     * @param eps      параметр остановки
      * @return true если условие выполнено
      */
-    private static boolean isTermination(double[] oldLines, double[] newLines, double eps) {
+    private static boolean isTermination(double[] oldLines, double[] newLines,
+                                         double eps) {
         for (int i = 0; i < oldLines.length; i++) {
             if (Math.abs(oldLines[i] - newLines[i]) > eps) {
                 return false;
@@ -186,7 +219,9 @@ public class CmeansFormation {
 
     /**
      * Определение количества линий на основе максимального разрыва
-     * @param sortedPoints массив отсортированных координат расположения игроков
+     *
+     * @param sortedPoints массив отсортированных координат расположения
+     *                     игроков
      * @return количество линий расположения игроков
      */
     private static int countLinesUsingDelta2(double[] sortedPoints) {
@@ -222,7 +257,9 @@ public class CmeansFormation {
 
     /**
      * Определение количества линий на основе подсчета больших разрывов
-     * @param sortedPoints массив отсортированных координат расположения игроков
+     *
+     * @param sortedPoints массив отсортированных координат расположения
+     *                     игроков
      * @return количество линий расположения игроков
      */
     private static int countClustersUsingRange5(double[] sortedPoints) {
@@ -235,9 +272,10 @@ public class CmeansFormation {
             delta[i] = sortedPoints[i + 1] - sortedPoints[i];
         }
         int numberOfLines = (int) Arrays.stream(delta)
-                .filter(x -> x > threshold)
-                .count() + 1;
-        if (numberOfLines < MIN_NUMBER_OF_LINES || numberOfLines > MAX_NUMBER_OF_LINES) {
+            .filter(x -> x > threshold)
+            .count() + 1;
+        if (numberOfLines < MIN_NUMBER_OF_LINES
+            || numberOfLines > MAX_NUMBER_OF_LINES) {
             return DEFAULT_NUMBER_OF_LINES;
         }
         return numberOfLines;
@@ -245,11 +283,14 @@ public class CmeansFormation {
 
     /**
      * Вычисление начальных координат линий расположения игроков
-     * @param sortedPoints массив отсортированных координат расположения игроков
+     *
+     * @param sortedPoints     массив отсортированных координат расположения
+     *                         игроков
      * @param numberOfClusters количество линий расположения игроков
      * @return массив начальных коорднат расположения игроков
      */
-    private static double[] getLines(double[] sortedPoints, int numberOfClusters) {
+    private static double[] getLines(double[] sortedPoints,
+                                     int numberOfClusters) {
 
         double[] delta = new double[sortedPoints.length - 1];
         for (int i = 0; i < delta.length; i++) {

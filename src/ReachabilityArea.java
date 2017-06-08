@@ -1,4 +1,5 @@
 public class ReachabilityArea implements Position {
+
     final private double xCenter;
     final private double yCenter;
     final private double radius;
@@ -6,7 +7,8 @@ public class ReachabilityArea implements Position {
     final private double x;
     final private double y;
 
-    public ReachabilityArea(double xCenter, double yCenter, double radius, double angle) {
+    public ReachabilityArea(double xCenter, double yCenter, double radius,
+                            double angle) {
         this.xCenter = xCenter;
         this.yCenter = yCenter;
         this.radius = radius;

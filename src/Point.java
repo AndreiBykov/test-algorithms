@@ -1,4 +1,5 @@
 public class Point implements Position {
+
     private double x;
     private double y;
 
